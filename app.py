@@ -170,6 +170,14 @@ async def get_parking(parking_id: int):
 #         raise HTTPException(status_code=404, detail="未找到推荐")
 #     return recommendations
 
+# 获取停车推荐
+@app.get("/recommendations/{user_id}")
+async def get_recommendations(user_id: str):
+    recommendations = parking_graph.get_recommendations(user_id)
+    if not recommendations:
+        raise HTTPException(status_code=404, detail="未找到推荐")
+    return recommendations
+
 
 if __name__ == "__main__":
     import uvicorn
