@@ -79,9 +79,10 @@ class ParkingGraph:
 
     def query_park_node(self, park_id):
         try:
+            park_id = int(park_id)
             find_node = self.node_matcher.match('ParkingSpot').where(id=park_id).first()
             if find_node:
-                return find_node
+                return find_node, None
             else:
                 return None, f"ParkingSpot with id {park_id} not found."
         except Exception as e:
@@ -89,20 +90,24 @@ class ParkingGraph:
 
     def query_user_node(self, user_id):
         try:
-            find_node = self.node_matcher.match('User').where(id=user_id).first()
+            user_id = int(user_id)  # 确保user_id被转换为整数
+            print(f"Querying user node for User ID: {user_id}")
+            find_node = self.node_matcher.match('User', id=user_id).first()
             if find_node:
-                return find_node
+                print(f"User node found for User ID: {user_id}")
+                return find_node, None
             else:
+                print(f"User node not found for User ID: {user_id}")
                 return None, f"User with id {user_id} not found."
         except Exception as e:
             raise Exception(f"Failed to query user: {str(e)}")
 
     def update_user_node(self, user_id, update_data):
         try:
-            # 查找用户节点
-            user_node = self.query_user_node(user_id)
-            if user_node is None:
-                return False, f"User with id {user_id} not found."
+            # 查找用户节点，解包返回的元组
+            user_node, error_message = self.query_user_node(user_id)
+            if not user_node:
+                return None, error_message
 
             # 更新用户节点
             for key, value in update_data.items():
@@ -115,58 +120,60 @@ class ParkingGraph:
             raise Exception(f"Failed to update user node: {str(e)}")
 
 
-# Initialization (this part would typically be done in your main application)
-uri = "http://localhost:7474"
-username = "neo4j"
-password = "cwy123456"
+if __name__ == '__main__':
 
-# Create an instance of ParkingGraph
-parking_graph = ParkingGraph(uri, username, password)
+    # Initialization (this part would typically be done in your main application)
+    uri = "http://localhost:7474"
+    username = "neo4j"
+    password = "cwy123456"
 
-# Example usage (these would be function calls from your application logic)
-try:
-    # Load parking spot data from CSV
-    parking_node_data = parking_graph.read_csv_file("data/parking_spots.csv")
+    # Create an instance of ParkingGraph
+    parking_graph = ParkingGraph(uri, username, password)
 
-    # Load user data from CSV
-    user_node_data = parking_graph.read_csv_file("data/original_ratings.csv")
+    # Example usage (these would be function calls from your application logic)
+    try:
+        # Load parking spot data from CSV
+        parking_node_data = parking_graph.read_csv_file("data/parking_spots.csv")
 
-    # Create nodes
-    for i in range(1, len(parking_node_data)):
-        parking_graph.create_parking_node(parking_node_data[i])
+        # Load user data from CSV
+        user_node_data = parking_graph.read_csv_file("data/original_ratings.csv")
 
-    for j in range(1, len(user_node_data)):
-        parking_graph.create_user_node(user_node_data[j])
+        # Create nodes
+        for i in range(1, len(parking_node_data)):
+            parking_graph.create_parking_node(parking_node_data[i])
 
-    # Create relationships
-    for m in range(1, len(user_node_data)):
-        result, message = parking_graph.create_rating_relation(user_node_data[m])
-        print(result, message)
+        for j in range(1, len(user_node_data)):
+            parking_graph.create_user_node(user_node_data[j])
 
-    # Query and update
-    park_node, park_message = parking_graph.query_park_node("20")
-    print(park_node, park_message)
+        # Create relationships
+        for m in range(1, len(user_node_data)):
+            result, message = parking_graph.create_rating_relation(user_node_data[m])
+            print(result, message)
 
-    # Dummy data for update example (this should come from your application logic)
-    update_data_example = {
-        "昵称": "新昵称",
-        "性别": "男",
-        "可接受的场内行驶距离": "100米",
-        "可接受的步行距离": "50米",
-        "可接受的停泊时间": "10分钟",
-        "可接受的停泊空间大小": "8",
-        "可接受的停车难易度": "中等",
-        "泊车位靠近电梯": "是",
-        "泊车位有监控管理": "否",
-        "可接受的停车费用": "5元/小时"
-    }
+        # Query and update
+        park_node, park_message = parking_graph.query_park_node("20")
+        print(park_node, park_message)
 
-    # Example function call for updating user node
-    # result, message = parking_graph.update_user_node("20", update_data_example)
-    # print(result, message)
+        # Dummy data for update example (this should come from your application logic)
+        update_data_example = {
+            "昵称": "新昵称",
+            "性别": "男",
+            "可接受的场内行驶距离": "100米",
+            "可接受的步行距离": "50米",
+            "可接受的停泊时间": "10分钟",
+            "可接受的停泊空间大小": "8",
+            "可接受的停车难易度": "中等",
+            "泊车位靠近电梯": "是",
+            "泊车位有监控管理": "否",
+            "可接受的停车费用": "5元/小时"
+        }
 
-    user_node, user_message = parking_graph.query_user_node("20")
-    print(user_node, user_message)
+        # Example function call for updating user node
+        # result, message = parking_graph.update_user_node("20", update_data_example)
+        # print(result, message)
 
-except Exception as e:
-    print(str(e))
+        user_node, user_message = parking_graph.query_user_node("20")
+        print(user_node, user_message)
+
+    except Exception as e:
+        print(str(e))

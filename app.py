@@ -19,7 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 app = FastAPI()
 
 # 初始化 ParkingGraph
-uri = "http://localhost:7474"
+uri = "bolt://localhost:7687"
 username = "neo4j"
 password = "cwy123456"
 parking_graph = ParkingGraph(uri, username, password)
@@ -38,14 +38,14 @@ class UserPreferences(BaseModel):
 
 
 class ParkingSpot(BaseModel):
-    parking_id: str
+    parking_id: int
     location: str
     availability: bool
     price: float
 
 
 class ParkingRecommendationRequest(BaseModel):
-    user_id: str
+    user_id: int
     location: str
     time: str
 
@@ -130,8 +130,9 @@ async def get_user(user_id: str, current_user=Depends(get_current_user)):
 
 # 更新用户偏好
 @app.put("/user/{user_id}")
-async def update_user_preferences(user_id: str, preferences: UserPreferences,
-                                  current_user=Depends(get_current_user)):
+# async def update_user_preferences(user_id: str, preferences: UserPreferences,
+#                                   current_user=Depends(get_current_user)):
+async def update_user_preferences(user_id: int, preferences: UserPreferences):
     update_data = preferences.dict()
     result, message = parking_graph.update_user_node(user_id, update_data)
     if not result:
@@ -141,7 +142,7 @@ async def update_user_preferences(user_id: str, preferences: UserPreferences,
 
 # 获取停车位信息
 @app.get("/parking/{parking_id}")
-async def get_parking(parking_id: str):
+async def get_parking(parking_id: int):
     parking_node, message = parking_graph.query_park_node(parking_id)
     if not parking_node:
         raise HTTPException(status_code=404, detail=message)
