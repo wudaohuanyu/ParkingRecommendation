@@ -19,9 +19,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 app = FastAPI()
 
 # 初始化 ParkingGraph
-uri = "bolt://localhost:7687"
+uri = "neo4j+s://fe89fc25.databases.neo4j.io"
 username = "neo4j"
-password = "cwy123456"
+password = "Q36KohKqcQJL4aT0FTbGDg3Cl3W1Rs9pIZmxdnwFPt8"
 parking_graph = ParkingGraph(uri, username, password)
 
 
