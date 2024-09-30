@@ -39,7 +39,6 @@ parking_graph_query = ParkingGraphQuery(URI, AUTH[0], AUTH[1])
 class UserCreate(BaseModel):
     username: str
     password: str
-    email: str
 
 
 class UserPreferences(BaseModel):
@@ -49,9 +48,14 @@ class UserPreferences(BaseModel):
 
 class ParkingSpot(BaseModel):
     parking_id: int
-    location: str
-    availability: bool
-    price: float
+    inner_distance: int
+    walking_distance: int
+    found_time: int
+    parking_space: int
+    parking_level: str
+    near_elevator: bool
+    monitoringfound_time: str
+    fee: float
 
 
 class ParkingRecommendationRequest(BaseModel):
@@ -111,7 +115,6 @@ async def register(user: UserCreate):
     hashed_password = get_password_hash(user.password)
     user_data = {
         "id": user.username,
-        "email": user.email,
         "hashed_password": hashed_password
     }
     parking_graph_manager.create_user_node(user_data)
