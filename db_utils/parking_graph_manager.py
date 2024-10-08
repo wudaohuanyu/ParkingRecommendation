@@ -127,6 +127,7 @@ class ParkingGraphManager:
         :return: 更新结果和对应的消息
         """
         try:
+
             user_node, error_message = self.query_user_node(user_id)
             if not user_node:
                 return None, error_message
@@ -138,3 +139,20 @@ class ParkingGraphManager:
             return True, "User updated successfully."
         except Exception as e:
             raise Exception(f"Failed to update user node: {str(e)}")
+
+    def query_user_node(self, user_id):
+        """
+        查询用户节点
+        :param user_id: 用户的ID
+        :return: 匹配的用户节点，如果未找到则返回消息
+        """
+        try:
+            user_id = int(user_id)
+            # 尝试从数据库中查询用户节点
+            find_node = self.node_matcher.match('User', id=user_id).first()
+            if find_node:
+                return find_node, None  # 返回节点对象
+            else:
+                return None, f"未找到ID为 {user_id} 的用户节点。"  # 没有找到节点
+        except Exception as e:
+            raise Exception(f"查询用户节点失败: {str(e)}")
