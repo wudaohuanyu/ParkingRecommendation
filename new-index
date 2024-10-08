@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>用户偏好信息</title>
+
+    <!-- 引入 Bootstrap CSS 和 Font Awesome -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- 引入 Vue 和 Axios -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- 自定义样式 -->
+    <style>
+      body {
+        background-color: #f4f6f9;
+      }
+      .card {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+      }
+      .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        transition: background-color 0.3s ease;
+      }
+      .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+      }
+      .form-control:focus {
+        box-shadow: none;
+        border-color: #007bff;
+      }
+      .input-group-text {
+        background-color: #007bff;
+        color: white;
+        border-radius: 0 5px 5px 0;
+      }
+      h1 {
+        color: #343a40;
+      }
+      .form-label {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-6">
+          <!-- 卡片式布局 -->
+          <div class="card p-4">
+            <h1 class="text-center mb-4">
+              <i class="fas fa-car"></i> 停车场用户偏好信息
+            </h1>
+
+            <!-- 用户输入ID -->
+            <div class="mb-4">
+              <label for="userId" class="form-label">用户ID:</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="userId"
+                  class="form-control"
+                  v-model="userIdString"
+                  placeholder="请输入用户ID"
+                />
+                <button
+                  @click="fetchUserPreferences"
+                  class="btn btn-primary ms-2"
+                >
+                  <i class="fas fa-search"></i> 获取信息
+                </button>
+              </div>
+            </div>
+
+            <!-- 偏好表单 -->
+            <form v-if="userExists" @submit.prevent="submitPreferences">
+              <div class="mb-3">
+                <label for="preferredParkingTypes" class="form-label"
+                  >停车场类型偏好:</label
+                >
+                <select
+                  id="preferredParkingTypes"
+                  class="form-select"
+                  v-model="preferences.preferred_parking_types"
+                  multiple
+                >
+                  <option value="商场">商场</option>
+                  <option value="地面停车场">地面停车场</option>
+                  <option value="地下停车场">地下停车场</option>
+                  <option value="交通枢纽">交通枢纽</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="maxParkingFee" class="form-label"
+                  >最大停车费用 (CNY/hour):</label
+                >
+                <input
+                  type="number"
+                  id="maxParkingFee"
+                  class="form-control"
+                  v-model="preferences.max_parking_fee"
+                  placeholder="请输入最大停车费"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="preferredParkingDifficulty" class="form-label"
+                  >停车难度偏好:</label
+                >
+                <select
+                  id="preferredParkingDifficulty"
+                  class="form-select"
+                  v-model="preferences.preferred_parking_difficulty"
+                >
+                  <option value="容易">容易</option>
+                  <option value="中等">中等</option>
+                  <option value="困难">困难</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="maxWalkingDistance" class="form-label"
+                  >最大步行距离 (米):</label
+                >
+                <input
+                  type="number"
+                  id="maxWalkingDistance"
+                  class="form-control"
+                  v-model="preferences.max_walking_distance"
+                  placeholder="请输入最大步行距离"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="maxDrivingDistance" class="form-label"
+                  >最大驾车距离 (米):</label
+                >
+                <input
+                  type="number"
+                  id="maxDrivingDistance"
+                  class="form-control"
+                  v-model="preferences.max_driving_distance"
+                  placeholder="请输入最大驾车距离"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-success w-100">
+                <i class="fas fa-check"></i> 提交偏好信息
+              </button>
+            </form>
+
+            <!-- 错误信息 -->
+            <div v-if="errorMessage" class="alert alert-danger mt-3">
+              <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+            </div>
+
+            <!-- 成功提示 -->
+            <div v-if="successMessage" class="alert alert-success mt-3">
+              <i class="fas fa-check-circle"></i> {{ successMessage }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 引入 Bootstrap 和 Font Awesome 的JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      const app = Vue.createApp({
+        data() {
+          return {
+            userIdString: "", // 用户输入的ID (字符串形式)
+            userId: null, // 用户ID (整数形式)
+            preferences: {
+              preferred_parking_types: [], // 用户偏好停车场类型列表
+              max_parking_fee: null, // 最大停车费用
+              preferred_parking_difficulty: null, // 用户偏好停车难度
+              max_walking_distance: null, // 最大步行距离
+              max_driving_distance: null, // 最大驾车距离
+            },
+            userExists: false, // 用户是否存在
+            successMessage: "", // 成功提示信息
+            errorMessage: "", // 错误提示信息
+          };
+        },
+        methods: {
+          // 获取用户偏好信息
+          async fetchUserPreferences() {
+            this.userId = parseInt(this.userIdString);
+
+            if (isNaN(this.userId)) {
+              this.errorMessage = "请输入有效的用户ID";
+              return;
+            }
+
+            this.errorMessage = "";
+            this.successMessage = "";
+            this.userExists = false;
+
+            try {
+              const response = await axios.get(`/user/${this.userId}`);
+              this.preferences = response.data;
+              this.userExists = true;
+            } catch (error) {
+              this.errorMessage = error.response
+                ? error.response.data.detail
+                : "无法获取用户信息";
+            }
+          },
+
+          // 提交偏好信息
+          async submitPreferences() {
+            this.errorMessage = "";
+            this.successMessage = "";
+
+            try {
+              const response = await axios.put(
+                `/user/${this.userId}`,
+                this.preferences
+              );
+              this.successMessage = response.data.msg;
+            } catch (error) {
+              this.errorMessage = error.response
+                ? error.response.data.detail
+                : "提交偏好信息失败";
+            }
+          },
+        },
+      });
+
+      app.mount("#app");
+    </script>
+  </body>
+</html>
