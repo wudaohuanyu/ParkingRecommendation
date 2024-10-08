@@ -29,14 +29,14 @@ def load_parking_spots(file_path):
             # 转换每条记录为字典
             parking_spots.append({
                 'id': int(row['ID']),
-                'drive_distance': float(row['场内行驶距离(米)']),
-                'walk_distance': float(row['步行距离(米)']),
-                'search_time': float(row['寻找到停泊位所花费的时间(分钟)']),
-                'space_size': int(row['泊位空间大小(0-10)']),
-                'difficulty': row['停车难易度'],
-                'near_elevator': row['是否靠近电梯'] == '是',
-                'has_surveillance': row['是否有监控'] == '是',
-                'cost_per_hour': float(row['停车费用(元/小时)'])
+                'drive_distance': float(row['Driving Distance (meters)']),
+                'walk_distance': float(row['Walking Distance (meters)']),
+                'search_time': float(row['Time to Find Parking (minutes)']),
+                'space_size': int(row['Parking Space Size (0-10)']),
+                'difficulty': row['Parking Difficulty'],
+                'near_elevator': row['Near Elevator'] == 'Yes',
+                'has_surveillance': row['Has Surveillance'] == 'Yes',
+                'cost_per_hour': float(row['Parking Fee (CNY/hour)'])
             })
     return parking_spots
 
@@ -126,7 +126,7 @@ def insert_data_into_neo4j(parking_spots_file, ratings_file):
 
 if __name__ == "__main__":
     # CSV 文件路径
-    parking_spots_file = "../data/parking_spots.csv"
+    parking_spots_file = "../data/parking_spots_with_coords.csv"
     ratings_file = "../data/original_ratings.csv"
 
     # 插入数据到 Neo4j
