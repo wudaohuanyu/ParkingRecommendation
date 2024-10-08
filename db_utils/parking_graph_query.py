@@ -1,6 +1,7 @@
 from py2neo import Graph, NodeMatcher
 import pandas as pd
 
+
 class ParkingGraphQuery:
     """
     ParkingGraphQuery类负责查询数据库中的节点信息，并提供基于用户评分的推荐功能。
@@ -96,18 +97,21 @@ class ParkingGraphQuery:
                 WITH u1, u2, s, p, r
                 WITH
                     p.id AS id,
-                    p.inner_distance AS inner_distance,
+                    p.driving_distance AS driving_distance,
                     p.walking_distance AS walking_distance,
                     p.found_time AS found_time,
-                    p.parking_space AS parking_space,
-                    p.parking_level AS parking_level,
+                    p.parking_space_size AS parking_space_size,
+                    p.parking_difficulty AS parking_difficulty,
                     p.near_elevator AS near_elevator,
-                    p.monitoringfound_time AS monitoringfound_time,
+                    p.has_surveillance AS has_surveillance,
                     p.fee AS fee,
+                    p.parking_type AS parking_type,
+                    p.longitude AS longitude,
+                    p.latitude AS latitude,
                     SUM(r.grading * s.sim)/SUM(s.sim) AS grade,
                     COUNT(u2) AS num
                 WHERE num >= {users_common}
-                RETURN id, inner_distance, walking_distance, found_time, parking_space, parking_level, near_elevator, monitoringfound_time, fee, grade, num
+                RETURN id, driving_distance, walking_distance, found_time, parking_space_size, parking_difficulty, near_elevator, has_surveillance, fee, parking_type, longitude, latitude, grade, num
                 ORDER BY grade DESC, num DESC
                 LIMIT {m}
             """
@@ -115,19 +119,22 @@ class ParkingGraphQuery:
             # 执行查询并获取推荐结果
             result = self.graph.run(query)
             recommendations = []
-            
+
             # 将查询结果转换为字典列表
             for record in result:
                 recommendations.append({
                     "id": record["id"],
-                    "inner_distance": record["inner_distance"],
+                    "driving_distance": record["driving_distance"],
                     "walking_distance": record["walking_distance"],
                     "found_time": record["found_time"],
-                    "parking_space": record["parking_space"],
-                    "parking_level": record["parking_level"],
+                    "parking_space_size": record["parking_space_size"],
+                    "parking_difficulty": record["parking_difficulty"],
                     "near_elevator": record["near_elevator"],
-                    "monitoringfound_time": record["monitoringfound_time"],
+                    "has_surveillance": record["has_surveillance"],
                     "fee": record["fee"],
+                    "parking_type": record["parking_type"],
+                    "longitude": record["longitude"],
+                    "latitude": record["latitude"],
                     "grade": record["grade"],
                     "num": record["num"],
                 })

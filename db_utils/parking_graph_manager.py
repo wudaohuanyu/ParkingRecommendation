@@ -5,10 +5,12 @@ import csv
 负责与停车场和用户节点的创建、关系的创建和更新相关的功能
 """
 
+
 class ParkingGraphManager:
     """
     ParkingGraphManager类负责管理停车场和用户节点的创建、更新以及关系的创建。
     """
+
     def __init__(self, uri, username, password):
         """
         初始化数据库连接
@@ -46,18 +48,23 @@ class ParkingGraphManager:
         :return: 创建的节点或者None
         """
         try:
+            # 检查停车场节点是否存在
             re_value = self.node_matcher.match('ParkingSpot').where(id=int(attrs[0])).first()
             if re_value is None:
+                # 创建停车场节点，映射新的属性
                 node = Node('ParkingSpot',
-                            id=int(attrs[0]),
-                            inner_distance=int(attrs[1]),
-                            walking_distance=int(attrs[2]),
-                            found_time=int(attrs[3]),
-                            parking_space=int(attrs[4]),
-                            parking_level=attrs[5],
-                            near_elevator=attrs[6],
-                            monitoringfound_time=attrs[7],
-                            fee=float(attrs[8]))
+                            id=int(attrs[0]),  # ID
+                            driving_distance=int(attrs[1]),  # Driving Distance (meters)
+                            walking_distance=int(attrs[2]),  # Walking Distance (meters)
+                            found_time=int(attrs[3]),  # Time to Find Parking (minutes)
+                            parking_space_size=int(attrs[4]),  # Parking Space Size (0-10)
+                            parking_difficulty=attrs[5],  # Parking Difficulty
+                            near_elevator=attrs[6],  # Near Elevator
+                            has_surveillance=attrs[7],  # Has Surveillance
+                            fee=float(attrs[8]),  # Parking Fee (CNY/hour)
+                            parking_type=attrs[9],  # Parking Type
+                            longitude=float(attrs[10]),  # Longitude
+                            latitude=float(attrs[11]))  # Latitude
                 self.graph.create(node)
                 return node
             return None
